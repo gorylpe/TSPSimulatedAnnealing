@@ -5,23 +5,6 @@ static inline double prob(double T, double diff){
     return exp(-diff/T);
 }
 
-static inline int partialSumToN(int n){
-    int sum = 0;
-    for(int i = 1; i <= n; ++i){
-        sum += i;
-    }
-    return sum;
-}
-
-void plotTemp(double Tstart, double Tmin, double coolingRate){
-    double T = Tstart;
-    while(T > Tmin){
-        printf("%f ", T);
-        T *=coolingRate;
-    }
-    printf("\n");
-}
-
 bool findAcceptedNeighborSwap(int n, double T, double Tstart, float** E, int *tmpCycle, int* tmpCycleSecondary, double *tmpLengthPtr, int timeLimit){
     double tmpLength = *tmpLengthPtr;
     bool foundNew = false;
@@ -63,8 +46,6 @@ bool findAcceptedNeighborSwap(int n, double T, double Tstart, float** E, int *tm
             }
         }
     }
-    //printf("temp\%: %f iterations: %d\n", T/Tstart, iterations);
-    //printf("%d ", iterations);
     *tmpLengthPtr = tmpLength;
     return foundNew;
 }
@@ -75,6 +56,32 @@ int simulatedAnnealing(int n, float** E, int* bestCycle, double* bestCycleLength
     double tmpLength = *bestCycleLength;
     memcpy(tmpCycle, bestCycle, n * sizeof(int));
 
+    /*
+     * Temps approximated from plot of cycle length to iteration number,
+     * temperature at start was always increasing to value which hesitate
+     * around n * average edge length value.
+     * For every cooling rate temperatures were the same,
+     * i.e. for cooling rate = 0.99995
+     * for n = 100
+     * starting temperature looked best at temperature after 0 iterations
+     * so start T = Tstart * startTempDelta ^ 0
+     * and after 200000 iterations so at the temp firstMinTemp * Tstart,
+     * cycle length wasn't differ much and calculations were expensive, so
+     * we can end there
+     * next, for n = 1000 we could see at the plots that
+     * starting temperature was hesitating around average cycle length longer,
+     * so we start after 50000 iterations, at temperature
+     * T = Tstart * startTempDelta ^ 1 (startTempDelta = (coolingrate)^50000
+     * and ending after 75000 more iterations than n=100 so after 225000, at 27500 iteration.
+     * Temperature then will equals Tstart * firstMinTemp * minTempDelta ^ 1
+     * finally for n = 10000, reading the plot we set
+     * start T = Tstart * startTempDelta ^ 2
+     * Tmin = Tstart * firstMinTemp * minTempDelta ^ 2
+     *
+     * for cooling rate 0.99999 had 5 more times iterations at every stage of calculating
+     * temperature (0.99995)^(1/5) = 0.99999, and corresponding temperatures was the same
+     * when looking at the plot
+     */
     const double startTempDelta = 0.0821;
     const double minTempDelta = 0.0235;
     const double firstMinTemp = 0.000045389;
@@ -82,7 +89,7 @@ int simulatedAnnealing(int n, float** E, int* bestCycle, double* bestCycleLength
     double deltaMin = pow(minTempDelta, log10((double)n) - 2.0) * firstMinTemp;
     double deltaStart = pow(startTempDelta, log10((double)n) - 2.0);
     double T = Tstart * deltaStart;
-    double Tmin = deltaMin * Tstart;
+    double Tmin = Tstart * deltaMin;
     double coolingRate = 0.99995;
 
     while(clock() < timeLimit && T > Tmin){
