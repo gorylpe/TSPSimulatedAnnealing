@@ -23,7 +23,7 @@ Times for appropriate tests are widely dispersed
 # Implementation details
 
 Temperatures were chosen empirically by reading appropriate values from plots shown below.
-The point was to limit iterations of algorithm to only this values which have real impact for finding
+The point was to limit iterations of algorithm to only these values which have real impact for finding
 the best solution at the best time. Iterating at random solutions when temperature
 is too high is as unnecessary as computationally expensive searching for next better solution
 when temperature is enough low to make this searching unprofitable.
@@ -63,7 +63,7 @@ At the beginning lets analyze some plots and determine where it will be the best
 and to end to not waste time.
 
 ### Plots description
-Cooling rate = 0.99995 </br>
+Cooling rate = **0.99995** </br>
 X axis - number of iterations </br>
 Y axis - cycle length </br>
 
@@ -97,6 +97,52 @@ ending iteration   = 350000  (temperature = Tstart * 0.0000000251 (coolingRate ^
 ### Temperatures precalculations
 
 #### Starting temperature
-asd
-asd
-ad
+As we can see, the starting temperature are increasing by a constant factor whenever number of cities
+increase 10 times. We can define this by simple equation and precalculated value
+```C
+factor = 0.0821
+T = Tstart * pow(factor, log10(n) - 2.0)
+```
+
+#### Ending temperature
+The same way we can precalculate values to calculate ending temperature pretty fast
+```C
+firstFactor = 0.000045389
+factor = 0.0235
+Tmin = Tstart * firstFactor * pow(factor, log10(n) - 2.0)
+```
+
+### Plots after program modification
+After modifications to iterations fit to appropriate start and end values,
+and draw values only between minimum and maximum of calculated cycle length we've got expected results
+
+#### n = 100
+<img src="readme_images/n100_99995.jpg" alt="Drawing" style="width: 400px;"/>
+
+#### n = 1000
+<img src="readme_images/n1000_99995.jpg" alt="Drawing" style="width: 400px;"/>
+
+#### n = 10000
+<img src="readme_images/n10000_99995.jpg" alt="Drawing" style="width: 400px;"/>
+
+## Other cooling rates
+
+Above plots were depiciting **0.99995** cooling rate. What about the others?
+Interestingly, cycle length behaves same way at cooling rate **0.99999**, and plots are the same
+for the same factors for starting and ending temperatures. It means that cooling rate which is 5th root of **0.99995** makes the same job but 5 iterations in place of single iteration of previous cooling rate which can give more precise solutions.
+
+### Plots for other cooling rate
+
+#### n = 100
+<img src="readme_images/n100_99999.jpg" alt="Drawing" style="width: 400px;"/>
+
+#### n = 1000
+<img src="readme_images/n1000_99999.jpg" alt="Drawing" style="width: 400px;"/>
+
+#### n = 10000
+<img src="readme_images/n10000_99999.jpg" alt="Drawing" style="width: 400px;"/>
+
+# Summary
+
+I think I made pretty good analysis of simulated annealing metaheuristic.
+Everything consists of my own research on this subject. In my opinion these plots and their interpretation are enough to construct efficiency program.
