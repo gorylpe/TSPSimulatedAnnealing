@@ -145,4 +145,4 @@ for the same factors for starting and ending temperatures. It means that cooling
 # Summary
 
 I think I made pretty good analysis of simulated annealing metaheuristic.
-Everything consists of my own research on this subject. In my opinion these plots and their interpretation are enough to construct efficiency program.
+Everything consists of my own research on this subject. In my opinion these plots and their interpretation are enough to construct an efficient program.
