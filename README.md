@@ -131,7 +131,10 @@ Above plots were depiciting **0.99995** cooling rate. What about the others?
 Interestingly, cycle length behaves same way at cooling rate **0.99999**, and plots are the same
 for the same factors for starting and ending temperatures. It means that cooling rate which is 5th root of **0.99995** makes the same job but 5 iterations in place of single iteration of previous cooling rate which can give more precise solutions.
 
-### Plots for other cooling rate
+But the time the program runs is **5 times** longer, with solution improvement for only about **30%**.
+Of course cooling rate can be changed to calculate more accurate solutions, but for college use was limited to **0.99995**.
+
+### Plots for better cooling rate
 
 #### n = 100
 <img src="readme_images/n100_99999.jpg" alt="Drawing" style="width: 400px;"/>
