@@ -1,5 +1,9 @@
 # GUI version
 
+# Details
+
+GUI addition over nonGUI version written in WinAPI.
+
 # Instructions
 
 * Compile app
