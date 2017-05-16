@@ -6,6 +6,9 @@
 //save memory
 #define E(x,y) ((x) > (y) ? E[(x)][(y)] : E[(y)][(x)])
 
+#define WINDOW_WIDTH 1280
+#define WINDOW_HEIGHT 720
+
 static inline void swap(int* a, int* b){
     int c = *a;
     *a = *b;
@@ -35,7 +38,7 @@ void calculateEdges(int n, float** E, float** pos);
 
 void loadEdges(int n, float** E);
 
-void initializeEdges(int n, float** E, FILE* input);
+void initializeEdgesAndPositions(int n, float** E, float** pos, FILE* input);
 
 void loadPositions(int n, float** pos, FILE* input);
 

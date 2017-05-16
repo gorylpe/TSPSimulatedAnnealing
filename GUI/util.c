@@ -84,19 +84,9 @@ void loadPositions(int n, float** pos, FILE* input){
     }
 }
 
-void initializeEdges(int n, float** E, FILE* input) {
-	float** pos;
-    pos = malloc(n * sizeof(float*));
-    for (int i = 0; i < n; ++i) {
-        pos[i] = malloc(2 * sizeof(float));
-    }
+void initializeEdgesAndPositions(int n, float **E, float **pos, FILE *input) {
     loadPositions(n, pos, input);
 
 	calculateEdges(n, E, pos);
 	//loadEdges(n, E);
-
-	for (int i = 0; i < n; ++i) {
-		free(pos[i]);
-	}
-	free(pos);
 }

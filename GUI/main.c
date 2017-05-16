@@ -4,48 +4,8 @@
 #include "util.h"
 #include "simulatedannealing.h"
 #include "startingcycle.h"
+#include <windows.h>
 
-void firstCycleNearestInsertionMax(int n, int* cycle, float** E) {
-    firstCycleAscending(n, cycle);
-    double len = E(0,1) + E(1,0);
-    for (int i = 2; i < n; ++i) {
-        int insertIt = i; //dla kolejnych i, cycle[i] = i
-        double maxLen = len - E(cycle[insertIt - 1],0) + E(cycle[i - 1],cycle[i]) + E(i,0); //cycle[insertIt % i] = 0 because last element of cycle is 0th;
-        for (int j = insertIt - 1; j >= 1; --j) {
-            double tmpLen = len - E(cycle[j - 1],cycle[j]) + E(cycle[j - 1],cycle[i]) + E(cycle[i],cycle[j]);
-            if (tmpLen > maxLen) {
-                maxLen = tmpLen;
-                insertIt = j;
-            }
-        }
-        if (insertIt < i) {
-            memmove(&cycle[insertIt + 1], &cycle[insertIt], (i - insertIt) * sizeof(int));
-            cycle[insertIt] = i;
-        }
-        len = maxLen;
-    }
-}
-
-void firstCycleNearestInsertionMin(int n, int* cycle, float** E) {
-    firstCycleAscending(n, cycle);
-    double len = E(0,1) + E(1,0);
-    for (int i = 2; i < n; ++i) {
-        int insertIt = i; //dla kolejnych i, cycle[i] = i
-        double minLen = len - E(cycle[insertIt - 1],0) + E(cycle[i - 1],cycle[i]) + E(i,0); //cycle[insertIt % i] = 0 because last element of cycle is 0th;
-        for (int j = insertIt - 1; j >= 1; --j) {
-            double tmpLen = len - E(cycle[j - 1],cycle[j]) + E(cycle[j - 1],cycle[i]) + E(cycle[i],cycle[j]);
-            if (tmpLen < minLen) {
-                minLen = tmpLen;
-                insertIt = j;
-            }
-        }
-        if (insertIt < i) {
-            memmove(&cycle[insertIt + 1], &cycle[insertIt], (i - insertIt) * sizeof(int));
-            cycle[insertIt] = i;
-        }
-        len = minLen;
-    }
-}
 
 double averageEdgeLength(int n, float** E){
     double sum = 0.0;
@@ -58,61 +18,22 @@ double averageEdgeLength(int n, float** E){
     return sum;
 }
 
-void testFirstTemp(FILE *input, FILE *output, FILE *error){
-    int n;
-    fscanf(input, "%d", &n);
-    printf("%d\n", n);
-
-    //save memory
-    float** E;
-    E = malloc(n * sizeof(float*));
-    for (int i = n - 1; i >= 0; --i) {
-        E[i] = malloc((i + 1) * sizeof(float));
-    }
-    initializeEdges(n, E, input);
-
-    int timeLimit;
-    fscanf(input, "%d", &timeLimit);
-    timeLimit *= CLOCKS_PER_SEC;
-    timeLimit += clock();
-
-    int* cycle = malloc(n * sizeof(int));
-    firstCycleNearestInsertionMin(n, cycle, E);
-    double minInsertion = cycleLen(n, cycle, E);
-    printf("min insertion: %f\n", minInsertion);
-    firstCycleNearestInsertionMax(n, cycle, E);
-    double maxInsertion = cycleLen(n, cycle, E);
-    printf("max insertion: %f\n", maxInsertion);
-    printf("avg insertion: %f\n", (maxInsertion + minInsertion)/2);
-    double avgEdge = averageEdgeLength(n, E);
-    printf("avg edge: %f\n", avgEdge);
-    printf("avg n*edge: %f\n", avgEdge * n);
-
-    double avgRandom = 0.0;
-    for(int i = 0; i < 1000; ++i){
-        firstCycleRandom(n, cycle);
-        avgRandom += cycleLen(n, cycle, E) / 1000.0;
-    }
-    printf("avg random of 1000: %f\n", avgRandom);
-}
-
-void mainProgram(FILE* input, FILE* output, FILE* error){
+void mainProgram(FILE* input, FILE* output, FILE* error, HWND hwnd){
     int n;
     fscanf(input, "%d", &n);
 
     //save memory
     float** E;
+    float** pos;
     E = malloc(n * sizeof(float*));
     for (int i = n - 1; i >= 0; --i) {
         E[i] = malloc((i + 1) * sizeof(float));
     }
-    initializeEdges(n, E, input);
-
-    int timeLimit;
-    fscanf(input, "%d", &timeLimit);
-    timeLimit *= CLOCKS_PER_SEC;
-    //time for end app and i/o
-    timeLimit -= CLOCKS_PER_SEC * n / 10000;
+    pos = malloc(n * sizeof(float*));
+    for (int i = 0; i < n; ++i) {
+        pos[i] = malloc(2 * sizeof(float));
+    }
+    initializeEdgesAndPositions(n, E, pos, input);
 
     int* cycle = malloc(n * sizeof(int));
     //firstCycleAscending(n, cycle);
@@ -121,38 +42,86 @@ void mainProgram(FILE* input, FILE* output, FILE* error){
     double* cycleLength = malloc(sizeof(double));
     *cycleLength = cycleLen(n, cycle, E);
 
-    simulatedAnnealing(n, E, cycle, cycleLength, n * averageEdgeLength(n, E), timeLimit);
+    simulatedAnnealing(n, E, pos, cycle, cycleLength, n * averageEdgeLength(n, E), hwnd);
 
     fprintf(output, "%f\n", *cycleLength);
-    int start;
+    /*int start;
     for (start = 0; start < n && cycle[start] != 0; ++start);
     for (int i = 0; i < n; ++i) {
         fprintf(error, "%d\n", cycle[(start + i)%n] + 1);
     }
-    fprintf(error, "%d\n", cycle[start] + 1);
+    fprintf(error, "%d\n", cycle[start] + 1);*/
 
     for (int i = 0; i < n; ++i) {
         free(E[i]);
     }
     free(E);
+    for (int i = 0; i < n; ++i) {
+        free(pos[i]);
+    }
+    free(pos);
     free(cycle);
     free(cycleLength);
 }
 
-int main(int argc, char* argv[]) {
-    FILE* input = stdin;
-    FILE* output = stdout;
-    FILE* error = stderr;
+#define BUTTON_START 501
 
-    srand(time(NULL));
+LRESULT CALLBACK wndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam){
+    switch(msg){
+        case WM_CLOSE:
+            DestroyWindow(hwnd);
+            break;
 
-    if(argc > 1)
-        input = fopen(argv[1], "r");
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            break;
 
-    mainProgram(input, output, error);
-    //testFirstTemp(input, output, error);
+        case WM_COMMAND:
+            switch(wparam){
+                case BUTTON_START: {
+                    FILE *input = fopen("data.txt", "r");
+                    if (input != NULL) {
+                        mainProgram(input, stdout, stderr, hwnd);
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+        default:
+            return DefWindowProc(hwnd, msg, wparam, lparam);
+    }
 
-    if(argc > 1)
-        fclose(input);
+    return 0;
+}
+
+int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
+{
+    HWND hWindow;
+    MSG message;
+    WNDCLASS window;
+
+    window.hInstance = hInstance;
+    window.lpszClassName = "main class";
+    window.lpfnWndProc = wndProc;
+    window.lpszMenuName = NULL;
+    window.style = 0;
+    window.hIcon = LoadIcon(NULL, IDI_WINLOGO);
+    window.hCursor = LoadCursor(NULL, IDC_ARROW);
+    window.hbrBackground = (HBRUSH) GetStockObject(WHITE_BRUSH);
+    window.cbClsExtra = 0;
+    window.cbWndExtra = 0;
+
+    if(!RegisterClass(&window)) return 0;
+
+    hWindow = CreateWindow("main class", "TSP Simulated Annealing GUI", WS_OVERLAPPEDWINDOW, 300, 100, WINDOW_WIDTH, WINDOW_HEIGHT, NULL, NULL, hInstance, NULL);
+    ShowWindow(hWindow, SW_SHOW);
+
+    HWND hButtonStart = CreateWindow("BUTTON", "Start", WS_CHILD | WS_VISIBLE | WS_BORDER, 50, 50, 100, 50, hWindow, (HMENU) BUTTON_START, hInstance, NULL);
+
+    while(GetMessage(&message, NULL, 0, 0)){
+        DispatchMessage(&message);
+    }
+
     return 0;
 }

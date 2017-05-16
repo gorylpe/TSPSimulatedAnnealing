@@ -1,11 +1,11 @@
 #include "simulatedannealing.h"
-#define DEBUG
+//#define DEBUG
 
 static inline double prob(double T, double diff){
     return exp(-diff/T);
 }
 
-bool findAcceptedNeighborSwap(int n, double T, double Tstart, float** E, int *tmpCycle, int* tmpCycleSecondary, double *tmpLengthPtr, int timeLimit){
+bool findAcceptedNeighborSwap(int n, double T, double Tstart, float** E, int *tmpCycle, int* tmpCycleSecondary, double *tmpLengthPtr){
     double tmpLength = *tmpLengthPtr;
     bool foundNew = false;
     int iterations = 0;
@@ -19,7 +19,7 @@ bool findAcceptedNeighborSwap(int n, double T, double Tstart, float** E, int *tm
      * ______________/
      * T = T0        T = T0 / 2
      */
-    while(clock() < timeLimit && !foundNew){
+    while(!foundNew){
         ++iterations;
         //br has to be <= n-1
         //a < b
@@ -50,11 +50,80 @@ bool findAcceptedNeighborSwap(int n, double T, double Tstart, float** E, int *tm
     return foundNew;
 }
 
-int simulatedAnnealing(int n, float** E, int* bestCycle, double* bestCycleLength, double Tstart, int timeLimit){
+void minPos(int n, float** pos, float* minx, float* miny, float* maxx, float* maxy){
+    *minx = pos[0][0];
+    *maxx = pos[0][0];
+    *miny = pos[0][1];
+    *maxy = pos[0][1];
+    for(int i = 1; i < n; ++i){
+        if(pos[i][0] < *minx)
+            *minx = pos[i][0];
+        if(pos[i][0] > *maxx)
+            *maxx = pos[i][0];
+        if(pos[i][1] < *miny)
+            *miny = pos[i][1];
+        if(pos[i][1] > *maxy)
+            *maxy = pos[i][1];
+    }
+}
+
+const int windowLeftMargin = 240;
+const int windowRightMargin = 40;
+const int windowTopMargin = 40;
+const int windowBottomMargin = 60;
+const int windowLeftPadding = 20;
+const int windowRightPadding = 20;
+const int windowTopPadding = 20;
+const int windowBottomPadding = 20;
+
+void clearMap(HDC hdc){
+    HBRUSH backgroundBrush, box;
+
+    backgroundBrush = CreateSolidBrush(0x00FF00);
+    box = (HBRUSH) SelectObject(hdc, backgroundBrush);
+    Rectangle(hdc, windowLeftMargin, windowTopMargin, WINDOW_WIDTH - windowRightMargin, WINDOW_HEIGHT - windowBottomMargin);
+    SelectObject(hdc, box);
+    DeleteObject(backgroundBrush);
+}
+
+void drawCycle(int n, int* cycle, HDC hdc, float** pos, float minx, float maxx, float miny, float maxy){
+    POINT oldPoint;
+
+    HBRUSH backgroundBrush, box;
+    backgroundBrush = CreateSolidBrush(0x000000);
+    box = (HBRUSH) SelectObject(hdc, backgroundBrush);
+
+    int windowXpos = (int)((pos[cycle[0]][0] - minx)/(maxx - minx)*(WINDOW_WIDTH - windowLeftMargin - windowRightMargin - windowLeftPadding - windowRightPadding) + windowLeftMargin + windowLeftPadding);
+    int windowYpos = (int)((pos[cycle[0]][1] - miny)/(maxy - miny)*(WINDOW_HEIGHT - windowTopMargin - windowBottomMargin - windowTopPadding - windowBottomPadding) + windowTopMargin + windowTopPadding);
+    MoveToEx(hdc, windowXpos, windowYpos, &oldPoint);
+    for(int i = 1; i < n; ++i){
+        windowXpos = (int)((pos[cycle[i]][0] - minx)/(maxx - minx)*(WINDOW_WIDTH - windowLeftMargin - windowRightMargin - windowLeftPadding - windowRightPadding) + windowLeftMargin + windowLeftPadding);
+        windowYpos = (int)((pos[cycle[i]][1] - miny)/(maxy - miny)*(WINDOW_HEIGHT - windowTopMargin - windowBottomMargin - windowTopPadding - windowBottomPadding) + windowTopMargin + windowTopPadding);
+
+        LineTo(hdc, windowXpos, windowYpos);
+        Ellipse(hdc, windowXpos - 4, windowYpos - 4, windowXpos + 4, windowYpos + 4);
+    }
+    windowXpos = (int)((pos[cycle[0]][0] - minx)/(maxx - minx)*(WINDOW_WIDTH - windowLeftMargin - windowRightMargin - windowLeftPadding - windowRightPadding) + windowLeftMargin + windowLeftPadding);
+    windowYpos = (int)((pos[cycle[0]][1] - miny)/(maxy - miny)*(WINDOW_HEIGHT - windowTopMargin - windowBottomMargin - windowTopPadding - windowBottomPadding) + windowTopMargin + windowTopPadding);
+    LineTo(hdc, windowXpos, windowYpos);
+
+    SelectObject(hdc, box);
+    DeleteObject(backgroundBrush);
+}
+
+int simulatedAnnealing(int n, float** E, float** pos, int* bestCycle, double* bestCycleLength, double Tstart, HWND hwnd){
     int* tmpCycle = malloc(n * sizeof(int));
     int* tmpCycleSecondary = malloc(n * sizeof(int));
     double tmpLength = *bestCycleLength;
     memcpy(tmpCycle, bestCycle, n * sizeof(int));
+
+    float minx, maxx, miny, maxy;
+    minPos(n, pos, &minx, &miny, &maxx, &maxy);
+
+    HDC hdc = GetDC(hwnd);
+
+    clearMap(hdc);
+    drawCycle(n, bestCycle, hdc, pos, minx, maxx, miny, maxy);
 
     /*
      * Temps approximated from plot of cycle length to iteration number,
@@ -90,10 +159,11 @@ int simulatedAnnealing(int n, float** E, int* bestCycle, double* bestCycleLength
     double deltaStart = pow(startTempDelta, log10((double)n) - 2.0);
     double T = Tstart * deltaStart;
     double Tmin = Tstart * deltaMin;
-    double coolingRate = 0.99995;
+    double coolingRate = 0.995;
 
-    while(clock() < timeLimit && T > Tmin){
-        findAcceptedNeighborSwap(n, T, Tstart, E, tmpCycle, tmpCycleSecondary, &tmpLength, timeLimit);
+    int iterations = 0;
+    while(T > Tmin){
+        findAcceptedNeighborSwap(n, T, Tstart, E, tmpCycle, tmpCycleSecondary, &tmpLength);
 
         int* swapCycle = tmpCycle;
         tmpCycle = tmpCycleSecondary;
@@ -104,14 +174,14 @@ int simulatedAnnealing(int n, float** E, int* bestCycle, double* bestCycleLength
             *bestCycleLength = tmpLength;
         }
 
-#ifdef DEBUG
-        printf("%.2f ", tmpLength);
-#endif
+        clearMap(hdc);
+        drawCycle(n, tmpCycle, hdc, pos, minx, maxx, miny, maxy);
+
+        if(iterations % 2 == 0)
+            Sleep(1);
 
         T *= coolingRate;
+        ++iterations;
     }
-#ifdef DEBUG
-    printf("\n");
-    printf("%d\n", clock());
-#endif
+    ReleaseDC(hwnd, hdc);
 }
