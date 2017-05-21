@@ -31,8 +31,8 @@ when temperature is enough low to make this searching unprofitable.
 ## Input format
 
 The first line contains an integer denoting ```n``` (number of cities).
-Each of the next ```n``` subsequent lines contains 3 integers ```i&nbsp;x&nbsp;y``` where ```i``` is city number and it is distinct integer of range ```1...n```, ```x``` and ```y``` are 2D euclidean coordinates of the city.
-And the last ```n&nbsp;+&nbsp;2``` line contains an integer describing maximal execution time.
+Each of the next ```n``` subsequent lines contains 3 integers ```i x y``` where ```i``` is city number and it is distinct integer of range ```1...n```, ```x``` and ```y``` are 2D euclidean coordinates of the city.
+And the last ```n+2``` line contains an integer ```t``` describing maximal execution time.
 
 ## Acceptance probability
 
