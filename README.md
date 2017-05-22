@@ -56,7 +56,8 @@ It means that for listed differences, corresponding probabilities will be:
 
 ## Starting solution
 Starting solution is chosen randomly. The most probably solution will be called "average cycle"
-with length calculated using equation listed below. Starting temperature equals length
+with length calculated using equation listed below. I noticed that high temperature leads cycle to hesitate around average cycle, so
+greedy algorithm for starting cycle is unnecessary. Starting temperature equals length
 of average cycle, it means
 ```C
 Tstart = averageCycleLength = numberOfCities * (sumOfAllEdgesLengths / numberOfEdges)

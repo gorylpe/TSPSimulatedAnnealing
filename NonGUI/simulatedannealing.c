@@ -1,5 +1,5 @@
 #include "simulatedannealing.h"
-#define DEBUG
+//#define DEBUG
 
 static inline double prob(double T, double diff){
     return exp(-diff/T);
