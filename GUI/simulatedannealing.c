@@ -50,40 +50,11 @@ bool findAcceptedNeighborSwap(int n, double T, double Tstart, float** E, int *tm
     return foundNew;
 }
 
-void minPos(int n, float** pos, float* minx, float* miny, float* maxx, float* maxy){
-    *minx = pos[0][0];
-    *maxx = pos[0][0];
-    *miny = pos[0][1];
-    *maxy = pos[0][1];
-    for(int i = 1; i < n; ++i){
-        if(pos[i][0] < *minx)
-            *minx = pos[i][0];
-        if(pos[i][0] > *maxx)
-            *maxx = pos[i][0];
-        if(pos[i][1] < *miny)
-            *miny = pos[i][1];
-        if(pos[i][1] > *maxy)
-            *maxy = pos[i][1];
-    }
-}
-
-const int windowLeftMargin = 240;
-const int windowRightMargin = 40;
-const int windowTopMargin = 40;
-const int windowBottomMargin = 60;
-const int windowLeftPadding = 20;
-const int windowRightPadding = 20;
-const int windowTopPadding = 20;
-const int windowBottomPadding = 20;
-
-int simulatedAnnealing(int n, float** E, float** pos, int* bestCycle, double* bestCycleLength, double Tstart){
+int simulatedAnnealing(int n, float** E, float** pos, int* cycle, double* cycleLength, double Tstart){
     int* tmpCycle = malloc(n * sizeof(int));
     int* tmpCycleSecondary = malloc(n * sizeof(int));
-    double tmpLength = *bestCycleLength;
-    memcpy(tmpCycle, bestCycle, n * sizeof(int));
-
-    float minx, maxx, miny, maxy;
-    minPos(n, pos, &minx, &miny, &maxx, &maxy);
+    double tmpLength = *cycleLength;
+    memcpy(tmpCycle, cycle, n * sizeof(int));
 
     /*
      * Temps approximated from plot of cycle length to iteration number,
@@ -129,12 +100,14 @@ int simulatedAnnealing(int n, float** E, float** pos, int* bestCycle, double* be
         tmpCycle = tmpCycleSecondary;
         tmpCycleSecondary = swapCycle;
 
-        if(tmpLength < *bestCycleLength){
-            memcpy(bestCycle, tmpCycle, n * sizeof(int));
-            *bestCycleLength = tmpLength;
-        }
+        memcpy(cycle, tmpCycle, n * sizeof(int));
+        *cycleLength = tmpLength;
 
         T *= coolingRate;
         ++iterations;
+
+        g_usleep(10000);
+
+        printf("%d\n", iterations);
     }
 }

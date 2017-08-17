@@ -79,7 +79,6 @@ void loadPositions(int n, float** pos, FILE* input){
         int a;
         float x, y;
         fscanf(input, "%d %f %f", &a, &x, &y);
-		printf("%d %d %f %f\n", i, a, x, y);
         pos[a-1][0] = x;
         pos[a-1][1] = y;
     }
