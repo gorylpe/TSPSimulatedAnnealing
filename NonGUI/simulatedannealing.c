@@ -1,5 +1,5 @@
 #include "simulatedannealing.h"
-//#define DEBUG
+#define DEBUG
 
 static inline double prob(double T, double diff){
     return exp(-diff/T);
@@ -104,14 +104,14 @@ int simulatedAnnealing(int n, float** E, int* bestCycle, double* bestCycleLength
             *bestCycleLength = tmpLength;
         }
 
-#ifdef DEBUG
+/*#ifdef DEBUG
         printf("%.2f ", tmpLength);
-#endif
+#endif*/
 
         T *= coolingRate;
     }
 #ifdef DEBUG
     printf("\n");
-    printf("%d\n", clock());
+    printf("%d %d\n", timeLimit, clock());
 #endif
 }

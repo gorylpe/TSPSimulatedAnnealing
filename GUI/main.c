@@ -4,7 +4,7 @@
 #include "util.h"
 #include "simulatedannealing.h"
 #include "startingcycle.h"
-#include <windows.h>
+#include <gtk/gtk.h>
 
 
 double averageEdgeLength(int n, float** E){
@@ -18,7 +18,7 @@ double averageEdgeLength(int n, float** E){
     return sum;
 }
 
-void mainProgram(FILE* input, FILE* output, FILE* error, HWND hwnd){
+void mainProgram(FILE* input, FILE* output, FILE* error){
     int n;
     fscanf(input, "%d", &n);
 
@@ -42,7 +42,7 @@ void mainProgram(FILE* input, FILE* output, FILE* error, HWND hwnd){
     double* cycleLength = malloc(sizeof(double));
     *cycleLength = cycleLen(n, cycle, E);
 
-    simulatedAnnealing(n, E, pos, cycle, cycleLength, n * averageEdgeLength(n, E), hwnd);
+    simulatedAnnealing(n, E, pos, cycle, cycleLength, n * averageEdgeLength(n, E));
 
     fprintf(output, "%f\n", *cycleLength);
     /*int start;
@@ -64,64 +64,28 @@ void mainProgram(FILE* input, FILE* output, FILE* error, HWND hwnd){
     free(cycleLength);
 }
 
-#define BUTTON_START 501
+int main(int argc, char* argv[]){
+    GtkWidget *window;
+    GtkWidget *container;
+    GtkWidget *startButton;
 
-LRESULT CALLBACK wndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam){
-    switch(msg){
-        case WM_CLOSE:
-            DestroyWindow(hwnd);
-            break;
+    gtk_init (&argc, &argv);
 
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            break;
+    window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_default_size(GTK_WINDOW(window), 1280, 720);
+    gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
+    g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
-        case WM_COMMAND:
-            switch(wparam){
-                case BUTTON_START: {
-                    FILE *input = fopen("data.txt", "r");
-                    if (input != NULL) {
-                        mainProgram(input, stdout, stderr, hwnd);
-                    }
-                    break;
-                }
-                default:
-                    break;
-            }
-        default:
-            return DefWindowProc(hwnd, msg, wparam, lparam);
-    }
+    container = gtk_fixed_new();
+    gtk_container_add(GTK_CONTAINER(window), container);
 
-    return 0;
-}
+    startButton = gtk_button_new_with_label("Start");
+    gtk_widget_set_size_request(startButton, 80, 60);
+    gtk_fixed_put(GTK_FIXED(container), startButton, 600, 330);
 
-int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow )
-{
-    HWND hWindow;
-    MSG message;
-    WNDCLASS window;
+    gtk_widget_show_all(window);
 
-    window.hInstance = hInstance;
-    window.lpszClassName = "main class";
-    window.lpfnWndProc = wndProc;
-    window.lpszMenuName = NULL;
-    window.style = 0;
-    window.hIcon = LoadIcon(NULL, IDI_WINLOGO);
-    window.hCursor = LoadCursor(NULL, IDC_ARROW);
-    window.hbrBackground = (HBRUSH) GetStockObject(WHITE_BRUSH);
-    window.cbClsExtra = 0;
-    window.cbWndExtra = 0;
-
-    if(!RegisterClass(&window)) return 0;
-
-    hWindow = CreateWindow("main class", "TSP Simulated Annealing GUI", WS_OVERLAPPEDWINDOW, 300, 100, WINDOW_WIDTH, WINDOW_HEIGHT, NULL, NULL, hInstance, NULL);
-    ShowWindow(hWindow, SW_SHOW);
-
-    HWND hButtonStart = CreateWindow("BUTTON", "Start", WS_CHILD | WS_VISIBLE | WS_BORDER, 50, 50, 100, 50, hWindow, (HMENU) BUTTON_START, hInstance, NULL);
-
-    while(GetMessage(&message, NULL, 0, 0)){
-        DispatchMessage(&message);
-    }
+    gtk_main();
 
     return 0;
 }
