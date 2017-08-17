@@ -29,9 +29,9 @@ double cycleLen(int n, int* cycle, float** E) {
 	for (int i = 1; i < n; ++i) {
 		int a = cycle[i - 1];
 		int b = cycle[i];
-		len += (double)E(a,b);
+		len += (double)Ed(a,b);
 	}
-	len += (double)E(cycle[0],cycle[n - 1]);
+	len += (double)Ed(cycle[0],cycle[n - 1]);
 	return len;
 }
 
@@ -79,6 +79,7 @@ void loadPositions(int n, float** pos, FILE* input){
         int a;
         float x, y;
         fscanf(input, "%d %f %f", &a, &x, &y);
+		printf("%d %d %f %f\n", i, a, x, y);
         pos[a-1][0] = x;
         pos[a-1][1] = y;
     }

@@ -26,8 +26,8 @@ static inline float cycleLen2OptDiff(int* cycle, float** E, int al, int a, int b
     if(al == b)
         return 0.0;
     float diff;
-    diff = -(E(cycle[al],cycle[a]) + E(cycle[b],cycle[br]));
-    diff += E(cycle[al],cycle[b]) + E(cycle[a],cycle[br]);
+    diff = -(Ed(cycle[al],cycle[a]) + Ed(cycle[b],cycle[br]));
+    diff += Ed(cycle[al],cycle[b]) + Ed(cycle[a],cycle[br]);
     /*printf("(%d;%d) -> (%d;%d)", cycle[al], cycle[a], cycle[b], cycle[br]);
     printf("diff: -%f-%f+%f+%f=%f\n", E(cycle[al],cycle[a]), E(cycle[b],cycle[br]), E(cycle[al],cycle[b]), E(cycle[a],cycle[br]), diff);*/
     return diff;

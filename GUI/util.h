@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 //save memory
-#define E(x,y) ((x) > (y) ? E[(x)][(y)] : E[(y)][(x)])
+#define Ed(x,y) ((x) > (y) ? E[(x)][(y)] : E[(y)][(x)])
 
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
